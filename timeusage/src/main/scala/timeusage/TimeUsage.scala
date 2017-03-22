@@ -63,20 +63,14 @@ object TimeUsage {
     *         have type Double. None of the fields are nullable.
     * @param columnNames Column names of the DataFrame
     */
-  def dfSchema(columnNames: List[String]): StructType = //StructType(StructField(columnNames.head, DoubleType, false) :: columnNames.tail.map(colName => StructField(colName, DoubleType, false)))
-  //StructType(columnNames.map(colName => StructField(colName, DoubleType, false)))
+  def dfSchema(columnNames: List[String]): StructType =
   StructType(StructField(columnNames.head, StringType, false) :: columnNames.tail.map(colName => StructField(colName, DoubleType, false)))
-  // StructType(columnNames.map(colName => StructField(colName, StringType, false)))
-  // StructType(StructField(columnNames.head, StringType, false) :: columnNames.tail.map(colName => StructField(colName, DoubleType, false)))
 
 
   /** @return An RDD Row compatible with the schema produced by `dfSchema`
     * @param line Raw fields
     */
-  def row(line: List[String]): Row = //Row(line)
-  Row.merge(Row(line.head.toString), Row.fromSeq(line.tail.map(_.toDouble)))
-  //Row.fromSeq(line.map(_.toDouble))
-  // Row.merge(Row.fromSeq(line.head), Row.fromSeq(line.tail.map(_.toDouble)))
+  def row(line: List[String]): Row = Row.merge(Row(line.head.toString), Row.fromSeq(line.tail.map(_.toDouble)))
 
   /** @return The initial data frame columns partitioned in three groups: primary needs (sleeping, eating, etc.),
     *         work and other (leisure activities)
@@ -170,8 +164,6 @@ object TimeUsage {
       .withColumn("sex", sexUdf(df("tesex")))
       .withColumn("age", ageUdf(df("teage")))
       .select(workingStatusProjection, sexProjection, ageProjection, primaryNeedsProjection, workProjection, otherProjection)
-//      .orderBy($"working".desc, $"sex".desc, $"age".desc)
- //     .where($"working" === "working") // Discard people who are not in labor force
   }
 
   /** @return the average daily time (in hours) spent in primary needs, working or leisure, grouped by the different
@@ -244,17 +236,11 @@ object TimeUsage {
     import org.apache.spark.sql.expressions.scalalang.typed
     import spark.implicits._
     summed.groupByKey(row => (row.working, row.sex, row.age))
-      //     .mapGroups((key, rows) => (key._1, key._2, key._3, rows))
       .agg(round(typed.avg[TimeUsageRow](_.primaryNeeds), 1).as[Double].name("primaryNeeds"),
       round(typed.avg[TimeUsageRow](_.work), 1).as[Double].name("work"),
       round(typed.avg[TimeUsageRow](_.other), 1).as[Double].name("other"))
       .map(row => TimeUsageRow(row._1._1, row._1._2, row._1._3, row._2, row._3, row._4))
       .sort("working", "sex", "age")
-
-//    summed.groupByKey(row => (row.working, row.sex, row.age))
-//      .agg(typed.avg[TimeUsageRow](_.primaryNeeds).name("primaryNeeds"),
-//        typed.avg[TimeUsageRow](_.work).name("work"), typed.avg[TimeUsageRow](_.other).name("other"))
-//      .as[TimeUsageRow]
   }
 }
 
